@@ -150,6 +150,24 @@ const Sidebar = ({
                     <span>📖</span> {currentLanguage === 'en' ? 'Reader' : 'Читання'}
                 </button>
                 <button
+                    onClick={() => onPageChange('library')}
+                    style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '12px',
+                        padding: '10px 12px',
+                        borderRadius: '6px',
+                        background: activePage === 'library' ? 'var(--bg-tertiary)' : 'transparent',
+                        color: activePage === 'library' ? 'var(--accent-primary)' : 'var(--text-secondary)',
+                        border: 'none',
+                        textAlign: 'left',
+                        width: '100%',
+                        fontWeight: activePage === 'library' ? '600' : '400'
+                    }}
+                >
+                    <span>📚</span> {currentLanguage === 'en' ? 'Library' : 'Бібліотека'}
+                </button>
+                <button
                     onClick={() => onPageChange('settings')}
                     style={{
                         display: 'flex',

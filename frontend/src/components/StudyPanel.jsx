@@ -1,6 +1,18 @@
 import React, { useState, useEffect } from 'react';
+import ReactQuill from 'react-quill-new';
+import 'react-quill-new/dist/quill.snow.css';
 
-const StudyPanel = ({ language, notes, onNotesChange, isCollapsed, onToggleCollapse, externalCode, onExternalCodeClear }) => {
+const StudyPanel = ({
+    language,
+    notes,
+    onNotesChange,
+    isCollapsed,
+    onToggleCollapse,
+    externalCode,
+    onExternalCodeClear,
+    userEmail,
+    onNoteSaved
+}) => {
     const [activeTab, setActiveTab] = useState('dictionary');
     const [searchTerm, setSearchTerm] = useState('');
     const [dictionaryEntry, setDictionaryEntry] = useState(null);
@@ -56,6 +68,44 @@ const StudyPanel = ({ language, notes, onNotesChange, isCollapsed, onToggleColla
             fetchMaps();
         }
     }, [activeTab]);
+
+    const handleSaveToLibrary = async () => {
+        if (!notes || !notes.trim()) return;
+
+        const defaultTitle = language === 'ua'
+            ? `Нотатка від ${new Date().toLocaleDateString()}`
+            : `Note from ${new Date().toLocaleDateString()}`;
+
+        const title = window.prompt(
+            language === 'ua' ? 'Введіть назву нотатки:' : 'Enter note title:',
+            defaultTitle
+        );
+
+        if (!title) return; // User cancelled
+
+        try {
+            const res = await fetch('http://localhost:5000/api/notes/library', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    email: userEmail,
+                    title,
+                    content: notes
+                })
+            });
+
+            if (res.ok) {
+                const newNote = await res.json();
+                if (onNoteSaved) onNoteSaved(newNote);
+                alert(language === 'ua' ? 'Нотатку збережено в бібліотеку!' : 'Note saved to library!');
+            } else {
+                alert(language === 'ua' ? 'Помилка збереження' : 'Error saving note');
+            }
+        } catch (err) {
+            console.error('Failed to save to library', err);
+            alert(language === 'ua' ? 'Помилка збереження' : 'Error saving note');
+        }
+    };
 
     return (
         <div className={`study-panel ${isCollapsed ? 'collapsed' : ''}`}>
@@ -171,15 +221,40 @@ const StudyPanel = ({ language, notes, onNotesChange, isCollapsed, onToggleColla
                 {activeTab === 'notes' && (
                     <div className="notes-view">
                         <h4 style={{ fontSize: '0.9rem', marginBottom: '0.5rem' }}>{language === 'en' ? 'Sermon Notes' : 'Нотатки до проповіді'}</h4>
-                        <textarea
+                        <ReactQuill
+                            theme="snow"
                             value={notes}
-                            onChange={(e) => onNotesChange(e.target.value)}
+                            onChange={onNotesChange}
                             placeholder={language === 'en' ? "Start typing your notes here..." : "Почніть писати свої нотатки тут..."}
-                            style={{ width: '100%', height: '300px', padding: '12px', border: 'none', background: 'var(--bg-primary)', color: 'var(--text-primary)', fontFamily: 'inherit', resize: 'none' }}
+                            style={{ height: '300px', marginBottom: '50px' }}
+                            modules={{
+                                toolbar: [
+                                    [{ 'header': [1, 2, 3, false] }],
+                                    ['bold', 'italic', 'underline'],
+                                    [{ 'list': 'ordered' }, { 'list': 'bullet' }],
+                                    [{ 'align': [] }],
+                                    ['clean']
+                                ]
+                            }}
                         />
                         <div style={{ display: 'flex', gap: '8px', marginTop: '1rem' }}>
                             <button style={{ flex: 1, padding: '8px', fontSize: '0.8rem', borderRadius: '4px' }}>
                                 {language === 'en' ? 'Export to PDF' : 'Експортувати в PDF'}
+                            </button>
+                            <button
+                                onClick={handleSaveToLibrary}
+                                style={{
+                                    flex: 1,
+                                    padding: '8px',
+                                    fontSize: '0.8rem',
+                                    borderRadius: '4px',
+                                    backgroundColor: 'var(--accent-primary)',
+                                    color: 'white',
+                                    border: 'none',
+                                    cursor: 'pointer'
+                                }}
+                            >
+                                {language === 'en' ? 'Save to Library' : 'Зберегти в бібліотеку'}
                             </button>
                             <button style={{ flex: 1, padding: '8px', fontSize: '0.8rem', borderRadius: '4px' }}>
                                 {language === 'en' ? 'Save to Drive' : 'Зберегти на Диск'}

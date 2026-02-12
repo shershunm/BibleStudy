@@ -1,0 +1,55 @@
+/* React Quill Overrides */
+.ql-toolbar {
+    background-color: var(--bg-secondary);
+    border-color: var(--border-color) !important;
+    border-top-left-radius: 4px;
+    border-top-right-radius: 4px;
+}
+
+.ql-container {
+    background-color: var(--bg-primary);
+    border-color: var(--border-color) !important;
+    border-bottom-left-radius: 4px;
+    border-bottom-right-radius: 4px;
+    color: var(--text-primary) !important;
+    font-size: 1rem;
+}
+
+/* Toolbar Icons */
+.ql-snow .ql-stroke {
+    stroke: var(--text-primary) !important;
+}
+
+.ql-snow .ql-fill {
+    fill: var(--text-primary) !important;
+}
+
+.ql-snow .ql-picker {
+    color: var(--text-primary) !important;
+}
+
+/* Dropdowns */
+.ql-snow .ql-picker-options {
+    background-color: var(--bg-secondary) !important;
+    color: var(--text-primary) !important;
+    border-color: var(--border-color) !important;
+}
+
+/* Active State */
+.ql-snow.ql-toolbar button.ql-active .ql-stroke {
+    stroke: var(--accent-primary) !important;
+}
+
+.ql-snow.ql-toolbar button:hover .ql-stroke {
+    stroke: var(--accent-primary) !important;
+}
+
+/* Editor Content */
+.ql-editor {
+    min-height: 200px;
+}
+
+.ql-editor.ql-blank::before {
+    color: var(--text-muted) !important;
+    font-style: italic;
+}

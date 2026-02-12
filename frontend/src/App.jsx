@@ -3,6 +3,7 @@ import './App.css';
 import Sidebar from './components/Sidebar';
 import Reader from './components/Reader';
 import StudyPanel from './components/StudyPanel';
+import NotesLibrary from './components/NotesLibrary';
 import Settings from './components/Settings';
 
 import LoginPage from './components/LoginPage';
@@ -19,7 +20,9 @@ function App() {
   const [verseNotes, setVerseNotes] = useState({});
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [isStudyPanelCollapsed, setIsStudyPanelCollapsed] = useState(false);
+
   const [dictionaryCode, setDictionaryCode] = useState(null);
+  const [studyNotesList, setStudyNotesList] = useState([]); // For the library
 
   // Dynamic Logo based on theme
   const logoSrc = theme === 'dark' ? '/BibleStudyLogo_darkMode.png' : '/BibleStudyLogo_lightMode.png';
@@ -46,9 +49,22 @@ function App() {
     document.documentElement.setAttribute('data-theme', theme);
   }, [theme]);
 
-  const handleLogin = (userData) => {
-    setUser(userData);
-    localStorage.setItem('user', JSON.stringify(userData));
+  const handleLogin = (userData, token, studyPad, notes, studyNotes) => {
+    setUser({ ...userData, token }); // Store token in user object for simplicity
+    localStorage.setItem('user', JSON.stringify({ ...userData, token }));
+
+    if (studyPad) setStudyNotes(studyPad);
+
+    // Convert array of notes to object { verseId: text }
+    if (notes && Array.isArray(notes)) {
+      const notesMap = {};
+      notes.forEach(n => { notesMap[n.verseId] = n.text; });
+      setVerseNotes(notesMap);
+    }
+
+    if (studyNotes && Array.isArray(studyNotes)) {
+      setStudyNotesList(studyNotes);
+    }
   };
 
   const handleLogout = () => {
@@ -66,9 +82,50 @@ function App() {
     setIsStudyPanelCollapsed(false); // Auto-expand when adding a verse
   };
 
+  // Persist study notes with debounce
+  useEffect(() => {
+    if (!user) return;
+    const timer = setTimeout(() => {
+      fetch('http://localhost:5000/api/user/studypad', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: user.email, content: studyNotes })
+      }).catch(err => console.error('Failed to save study notes', err));
+    }, 1000); // 1 sec debounce
+    return () => clearTimeout(timer);
+  }, [studyNotes, user]);
+
   const handleUpdateVerseNote = (verseId, note) => {
     setVerseNotes(prev => ({ ...prev, [verseId]: note }));
+
+    if (user) {
+      fetch('http://localhost:5000/api/notes', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: user.email, verseId, text: note })
+      }).catch(err => console.error('Failed to save verse note', err));
+    }
   };
+
+  // Sync user data on mount/login
+  useEffect(() => {
+    if (user && user.email) {
+      fetch(`http://localhost:5000/api/user/${user.email}`)
+        .then(res => res.json())
+        .then(data => {
+          if (data.studyPad) setStudyNotes(data.studyPad);
+          if (data.notes) {
+            const notesMap = {};
+            data.notes.forEach(n => { notesMap[n.verseId] = n.text; });
+            setVerseNotes(notesMap);
+          }
+          if (data.studyNotes) {
+            setStudyNotesList(data.studyNotes);
+          }
+        })
+        .catch(err => console.error('Failed to sync user data', err));
+    }
+  }, [user?.email]); // Only re-run if email changes
 
   if (!user) {
     return <LoginPage onLogin={handleLogin} language={language} theme={theme} />;
@@ -134,6 +191,8 @@ function App() {
             }}
           />
 
+
+
           {activePage === 'dashboard' ? (
             <>
               <Reader
@@ -165,8 +224,17 @@ function App() {
                 externalCode={dictionaryCode}
                 onExternalCodeClear={() => setDictionaryCode(null)}
                 isSidebarCollapsed={isSidebarCollapsed}
+                userEmail={user.email}
+                onNoteSaved={(newNote) => setStudyNotesList(prev => [newNote, ...prev])}
               />
             </>
+          ) : activePage === 'library' ? (
+            <NotesLibrary
+              language={language}
+              notes={studyNotesList}
+              userEmail={user.email}
+              onNotesUpdate={setStudyNotesList}
+            />
           ) : (
             <Settings
               language={language}

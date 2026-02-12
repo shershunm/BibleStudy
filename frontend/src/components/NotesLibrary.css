@@ -1,0 +1,165 @@
+.notes-library {
+    display: flex;
+    height: 100%;
+    width: 100%;
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+}
+
+.notes-sidebar {
+    width: 300px;
+    border-right: 1px solid var(--border-color);
+    display: flex;
+    flex-direction: column;
+    padding: 1rem;
+    overflow-y: auto;
+}
+
+.new-note-btn {
+    padding: 10px;
+    background-color: var(--accent-primary);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: bold;
+    margin-bottom: 1rem;
+}
+
+.notes-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.note-item {
+    padding: 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    border: 1px solid transparent;
+}
+
+.note-item:hover {
+    background-color: var(--bg-tertiary);
+}
+
+.note-item.active {
+    background-color: var(--bg-tertiary);
+    border-color: var(--accent-primary);
+}
+
+.note-title {
+    font-weight: bold;
+    margin-bottom: 4px;
+}
+
+.note-date {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+}
+
+.note-editor-area {
+    flex: 1;
+    padding: 2rem;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+}
+
+.editor-form {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    gap: 1rem;
+}
+
+.title-input {
+    font-size: 1.5rem;
+    padding: 10px;
+    border: none;
+    background: transparent;
+    color: var(--text-primary);
+    border-bottom: 2px solid var(--border-color);
+    outline: none;
+}
+
+.title-input:focus {
+    border-color: var(--accent-primary);
+}
+
+.content-textarea {
+    flex: 1;
+    padding: 1rem;
+    border: none;
+    background: var(--bg-tertiary);
+    color: var(--text-primary);
+    font-size: 1rem;
+    line-height: 1.6;
+    border-radius: 8px;
+    resize: none;
+    outline: none;
+}
+
+.editor-actions,
+.view-actions {
+    display: flex;
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.save-btn,
+.edit-btn {
+    padding: 8px 16px;
+    background-color: var(--accent-primary);
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.cancel-btn {
+    padding: 8px 16px;
+    background-color: transparent;
+    border: 1px solid var(--border-color);
+    color: var(--text-primary);
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.delete-btn {
+    padding: 8px 16px;
+    background-color: #ff4d4d;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.note-view h2 {
+    margin-bottom: 0.5rem;
+    color: var(--accent-primary);
+}
+
+.note-meta {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    margin-bottom: 2rem;
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 1rem;
+}
+
+.note-content-display {
+    white-space: pre-wrap;
+    line-height: 1.6;
+    font-size: 1.1rem;
+}
+
+.no-selection {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    color: var(--text-muted);
+    font-size: 1.2rem;
+}

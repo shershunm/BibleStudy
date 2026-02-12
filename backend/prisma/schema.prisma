@@ -15,8 +15,10 @@ model User {
   email     String   @unique
   password  String
   name      String?
+  studyPad  String? // General notes for the study panel
   notes     Note[]
   highlights Highlight[]
+  studyNotes StudyNote[]
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
@@ -100,4 +102,14 @@ model MapLocation {
   longitude   Float?
   description String?
   biblicalEra String? // e.g., Patriarchal, United Monarchy, etc.
+}
+
+model StudyNote {
+  id        Int      @id @default(autoincrement())
+  title     String
+  content   String
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }

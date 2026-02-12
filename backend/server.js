@@ -17,7 +17,8 @@ app.post('/api/login', async (req, res) => {
 
     try {
         const user = await prisma.user.findUnique({
-            where: { email }
+            where: { email },
+            include: { notes: true }
         });
 
         if (user && user.password === password) {
@@ -28,7 +29,9 @@ app.post('/api/login', async (req, res) => {
                     email: user.email,
                     name: user.name
                 },
-                token: 'mock-jwt-token-for-testing'
+                token: 'mock-jwt-token-for-testing',
+                studyPad: user.studyPad,
+                notes: user.notes
             });
         } else {
             res.status(401).json({
@@ -42,6 +45,109 @@ app.post('/api/login', async (req, res) => {
             success: false,
             message: 'Internal server error'
         });
+    }
+});
+
+// Registration Endpoint
+app.post('/api/register', async (req, res) => {
+    const { email, password, name } = req.body;
+    console.log(`Registering user: ${email}`);
+
+    try {
+        const existingUser = await prisma.user.findUnique({ where: { email } });
+        if (existingUser) {
+            return res.status(400).json({ success: false, message: 'Email already in use' });
+        }
+
+        const newUser = await prisma.user.create({
+            data: {
+                email,
+                password, // In production, hash this!
+                name,
+                studyPad: ''
+            }
+        });
+
+        res.json({
+            success: true,
+            user: {
+                email: newUser.email,
+                name: newUser.name
+            },
+            token: 'mock-jwt-token-for-testing',
+            studyPad: newUser.studyPad,
+            notes: []
+        });
+    } catch (error) {
+        console.error('Registration error:', error);
+        res.status(500).json({ success: false, message: 'Error creating user' });
+    }
+});
+
+// Update Study Pad
+app.post('/api/user/studypad', async (req, res) => {
+    const { email, content } = req.body;
+    console.log(`Updating studypad for: ${email}`);
+    try {
+        await prisma.user.update({
+            where: { email },
+            data: { studyPad: content }
+        });
+        res.json({ success: true });
+    } catch (error) {
+        console.error('Failed to update study pad:', error);
+        res.status(500).json({ error: 'Failed to update study pad' });
+    }
+});
+
+// Notes API
+app.get('/api/notes', async (req, res) => {
+    // In a real app, get userId from token. Here we rely on query param or just fail safely
+    const { email } = req.query; // Simple auth-less demo approach
+    if (!email) return res.json([]);
+
+    try {
+        const user = await prisma.user.findUnique({
+            where: { email },
+            include: { notes: true }
+        });
+        res.json(user ? user.notes : []);
+    } catch (error) {
+        console.error('Failed to fetch notes:', error);
+        res.status(500).json({ error: 'Failed to fetch notes' });
+    }
+});
+
+app.post('/api/notes', async (req, res) => {
+    const { email, verseId, text } = req.body;
+    try {
+        const user = await prisma.user.findUnique({ where: { email } });
+        if (!user) return res.status(404).json({ error: 'User not found' });
+
+        // Update or create note
+        // Check if note exists
+        const existingNote = await prisma.note.findFirst({
+            where: { userId: user.id, verseId: verseId }
+        });
+
+        if (existingNote) {
+            await prisma.note.update({
+                where: { id: existingNote.id },
+                data: { text }
+            });
+        } else {
+            await prisma.note.create({
+                data: {
+                    userId: user.id,
+                    verseId: verseId,
+                    text
+                }
+            });
+        }
+        res.json({ success: true });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Failed to save note' });
     }
 });
 
@@ -118,6 +224,91 @@ app.get('/api/dictionary/:code', async (req, res) => {
         res.json(entry);
     } catch (error) {
         res.status(500).json({ error: 'Failed to fetch dictionary entry' });
+    }
+});
+
+// User Sync Endpoint - Fixes persistence issues by fetching all data
+app.get('/api/user/:email', async (req, res) => {
+    const { email } = req.params;
+    try {
+        const user = await prisma.user.findUnique({
+            where: { email },
+            include: {
+                notes: true,
+                studyNotes: { orderBy: { updatedAt: 'desc' } }
+            }
+        });
+        if (!user) return res.status(404).json({ error: 'User not found' });
+
+        res.json({
+            user: { email: user.email, name: user.name },
+            studyPad: user.studyPad,
+            notes: user.notes,
+            studyNotes: user.studyNotes
+        });
+    } catch (error) {
+        console.error('Sync error:', error);
+        res.status(500).json({ error: 'Failed to sync user data' });
+    }
+});
+
+// Study Notes Library API
+app.get('/api/notes/library', async (req, res) => {
+    const { email } = req.query;
+    try {
+        const user = await prisma.user.findUnique({
+            where: { email },
+            include: { studyNotes: { orderBy: { updatedAt: 'desc' } } }
+        });
+        res.json(user ? user.studyNotes : []);
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to fetch library notes' });
+    }
+});
+
+app.post('/api/notes/library', async (req, res) => {
+    const { email, title, content } = req.body;
+    try {
+        const user = await prisma.user.findUnique({ where: { email } });
+        if (!user) return res.status(404).json({ error: 'User not found' });
+
+        const note = await prisma.studyNote.create({
+            data: {
+                userId: user.id,
+                title,
+                content
+            }
+        });
+        res.json(note);
+    } catch (error) {
+        console.error('Create note error:', error);
+        res.status(500).json({ error: 'Failed to create note' });
+    }
+});
+
+app.put('/api/notes/library/:id', async (req, res) => {
+    const { id } = req.params;
+    const { title, content } = req.body;
+    try {
+        const note = await prisma.studyNote.update({
+            where: { id: parseInt(id) },
+            data: { title, content }
+        });
+        res.json(note);
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to update note' });
+    }
+});
+
+app.delete('/api/notes/library/:id', async (req, res) => {
+    const { id } = req.params;
+    try {
+        await prisma.studyNote.delete({
+            where: { id: parseInt(id) }
+        });
+        res.json({ success: true });
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to delete note' });
     }
 });
 
