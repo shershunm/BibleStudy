@@ -5,6 +5,7 @@ import Reader from './components/Reader';
 import StudyPanel from './components/StudyPanel';
 import NotesLibrary from './components/NotesLibrary';
 import Settings from './components/Settings';
+import SearchModal from './components/SearchModal';
 
 import LoginPage from './components/LoginPage';
 
@@ -20,6 +21,7 @@ function App() {
   const [verseNotes, setVerseNotes] = useState({});
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [isStudyPanelCollapsed, setIsStudyPanelCollapsed] = useState(false);
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
 
   const [dictionaryCode, setDictionaryCode] = useState(null);
   const [studyNotesList, setStudyNotesList] = useState([]); // For the library
@@ -149,6 +151,19 @@ function App() {
           </div>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+            <button
+              onClick={() => setIsSearchOpen(true)}
+              style={{
+                background: 'none',
+                border: 'none',
+                cursor: 'pointer',
+                fontSize: '1.2rem',
+                marginRight: '10px'
+              }}
+              title={language === 'en' ? 'Search' : 'Пошук'}
+            >
+              🔍
+            </button>
             <span style={{ fontSize: '0.9rem', color: 'var(--text-secondary)' }}>
               {language === 'en' ? `Welcome, ${user?.name || 'User'}` : `Вітаємо, ${user?.name || 'Користувач'}`}
             </span>
@@ -246,6 +261,27 @@ function App() {
           )}
         </ErrorBoundary>
       </div>
+      <SearchModal
+        isOpen={isSearchOpen}
+        onClose={() => setIsSearchOpen(false)}
+        language={language}
+        userEmail={user.email}
+        onNavigate={(book, chapter, verse) => {
+          setActiveBook(book);
+          setActiveChapter(chapter);
+          setActivePage('dashboard');
+          // Optional: You could scroll to the verse here if Reader supports it
+        }}
+        onOpenDictionary={(code) => {
+          setDictionaryCode(code);
+          setIsStudyPanelCollapsed(false);
+          setActivePage('dashboard');
+        }}
+        onOpenLibrary={(noteId) => {
+          setActivePage('library');
+          // Future: could pass noteId to NotesLibrary to auto-scroll or highlight
+        }}
+      />
     </div>
   );
 }

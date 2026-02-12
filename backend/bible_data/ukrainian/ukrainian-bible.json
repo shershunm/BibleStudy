@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>GetBible.Life – Gatekeeper</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        html, body {
+            height: 100%;
+            margin: 0;
+            font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+            background: #ffffff;
+            color: #333;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background-image: radial-gradient(#ccc 1px, transparent 0),
+                              radial-gradient(#ccc 1px, transparent 0);
+            background-size: 40px 40px;
+            background-position: 0 0, 20px 20px;
+        }
+
+        .container {
+            width: 90%;
+            max-width: 600px;
+            padding: 2rem;
+            text-align: center;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 8px;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            font-size: clamp(1.5rem, 4vw, 2rem);
+            color: #028dde;
+            margin-bottom: 1rem;
+        }
+
+        p {
+            font-size: clamp(1rem, 3.5vw, 1.1rem);
+            line-height: 1.6;
+            margin-bottom: 1rem;
+        }
+
+        .redirect-note {
+            font-size: 0.9rem;
+            color: #777;
+            margin-top: 2rem;
+        }
+
+        a {
+            color: #028dde;
+            text-decoration: none;
+            font-weight: bold;
+            word-break: break-word;
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+
+        .footer {
+            position: relative;
+            margin-top: auto;
+            width: 100%;
+            background: #f8f8f8;
+            text-align: center;
+            padding: 10px;
+            font-size: 0.85rem;
+            color: #555;
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: 1rem;
+            }
+
+            .footer {
+                font-size: 0.75rem;
+                padding: 8px;
+            }
+        }
+    </style>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            let path = window.location.pathname;
+
+            // Build the final redirection URL
+            const redirectTo = 'https://getbible.life' + path;
+
+            // Update the visible link
+            const link = document.getElementById('fallback-link');
+            link.href = redirectTo;
+            link.textContent = redirectTo;
+
+            setTimeout(() => {
+                window.location.href = redirectTo;
+            }, 25000);
+        });
+    </script>
+</head>
+<body>
+    <div class="container">
+        <h1>GetBible.Life Gatekeeper</h1>
+        <p>We're currently experiencing an unusually high load on our servers, which may be caused by heavy traffic or a potential denial-of-service attack.</p>
+        <p>So we are just checking if this is request is an attack.</p>
+        <p>You can open the site directly with:</p>
+        <p><a id="fallback-link" href="https://getbible.life/" target="_blank" rel="noopener">https://getbible.life/</a></p>
+        <p class="redirect-note">You will be redirected automatically after 30 seconds...</p>
+    </div>
+    <div class="footer">
+        © GetBible. All rights reserved.
+    </div>
+</body>
+</html>

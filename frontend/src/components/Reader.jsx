@@ -155,37 +155,81 @@ const Reader = ({
     const currentBookName = chapterLeft?.bookName || (language === 'en' ? 'Loading...' : 'Завантаження...');
 
     // Helper to parse text with Strong's numbers: "In <H7225> the beginning"
-    const renderVerseText = (text) => {
-        if (!text) return null;
-        // Regex to match <H1234> or <G1234>
-        const parts = text.split(/(<[HG]\d+>)/g);
+    // Also supports strongsNumbers field: "H7225,H430,H1254"
+    const renderVerseText = (verse) => {
+        if (!verse) return null;
 
-        return parts.map((part, index) => {
-            if (part.match(/^<[HG]\d+>$/)) {
-                const code = part.replace(/[<>]/g, '');
-                return (
-                    <sup
-                        key={index}
-                        onClick={(e) => {
-                            e.stopPropagation();
-                            onStrongClick?.(code);
-                        }}
-                        style={{
-                            color: 'var(--accent-primary)',
-                            cursor: 'pointer',
-                            fontSize: '0.6em',
-                            fontWeight: 'bold',
-                            marginLeft: '2px',
-                            marginRight: '2px'
-                        }}
-                        title={`View Strong's ${code}`}
-                    >
-                        {code}
-                    </sup>
-                );
-            }
-            return <span key={index}>{part}</span>;
-        });
+        const text = verse.text || verse;
+        const strongsNumbers = typeof verse === 'object' ? verse.strongsNumbers : null;
+
+        // First, check if text has embedded Strong's numbers
+        const hasEmbeddedStrongs = text && text.includes('<');
+
+        if (hasEmbeddedStrongs) {
+            // Regex to match <H1234> or <G1234>
+            const parts = text.split(/(<[HG]\d+>)/g);
+
+            return parts.map((part, index) => {
+                if (part.match(/^<[HG]\d+>$/)) {
+                    const code = part.replace(/[<>]/g, '');
+                    return (
+                        <sup
+                            key={index}
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                onStrongClick?.(code);
+                            }}
+                            style={{
+                                color: 'var(--accent-primary)',
+                                cursor: 'pointer',
+                                fontSize: '0.6em',
+                                fontWeight: 'bold',
+                                marginLeft: '2px',
+                                marginRight: '2px'
+                            }}
+                            title={`View Strong's ${code}`}
+                        >
+                            {code}
+                        </sup>
+                    );
+                }
+                return <span key={index}>{part}</span>;
+            });
+        }
+
+        // If no embedded Strong's but has strongsNumbers field, display them after the text
+        if (strongsNumbers) {
+            const strongsArray = strongsNumbers.split(',').map(s => s.trim());
+            return (
+                <>
+                    <span>{text}</span>
+                    {' '}
+                    {strongsArray.map((code, index) => (
+                        <sup
+                            key={index}
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                onStrongClick?.(code);
+                            }}
+                            style={{
+                                color: 'var(--accent-primary)',
+                                cursor: 'pointer',
+                                fontSize: '0.6em',
+                                fontWeight: 'bold',
+                                marginLeft: '2px',
+                                marginRight: '2px'
+                            }}
+                            title={`View Strong's ${code}`}
+                        >
+                            {code}
+                        </sup>
+                    ))}
+                </>
+            );
+        }
+
+        // No Strong's numbers at all
+        return <span>{text}</span>;
     };
 
     return (
@@ -276,7 +320,7 @@ const Reader = ({
                                         <div style={{ display: 'flex', gap: '8px', alignItems: 'flex-start' }}>
                                             <span className="verse-num">{v.number}</span>
                                             <div style={{ flex: 1 }}>
-                                                {renderVerseText(v.text)}
+                                                {renderVerseText(v)}
                                                 <VerseActions verse={v} />
                                                 {activeVerseNote === v.id && <VerseNoteEditor verseId={v.id} />}
                                             </div>
@@ -286,7 +330,7 @@ const Reader = ({
                                         <div style={{ display: 'flex', gap: '8px', alignItems: 'flex-start' }}>
                                             <span className="verse-num">{v.number}</span>
                                             <div style={{ flex: 1 }}>
-                                                {rightVerse ? renderVerseText(rightVerse.text) : '...'}
+                                                {rightVerse ? renderVerseText(rightVerse) : '...'}
                                             </div>
                                         </div>
                                     </div>
@@ -301,7 +345,7 @@ const Reader = ({
                                 <div style={{ display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
                                     <span className="verse-num">{v.number}</span>
                                     <div style={{ flex: 1 }}>
-                                        {renderVerseText(v.text)}
+                                        {renderVerseText(v)}
                                         <VerseActions verse={v} />
                                         {activeVerseNote === v.id && <VerseNoteEditor verseId={v.id} />}
                                     </div>

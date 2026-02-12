@@ -207,14 +207,7 @@ async function main() {
         }
     ];
 
-    for (const entry of dictionaryEntries) {
-        await prisma.dictionaryEntry.upsert({
-            where: { code: entry.code },
-            update: entry,
-            create: entry,
-        });
-    }
-    console.log('Seeded sample dictionary entries.');
+    console.log('Skipping dictionary entries (using Strong\'s entries instead).');
 
     // 4. Seed Sample Map Locations
     const locations = [

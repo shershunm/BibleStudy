@@ -26,17 +26,39 @@ const StudyPanel = ({
         setLoading(true);
         try {
             // Strong's codes usually start with H or G
-            const code = term.match(/^[HG]\d+/i) ? term : `H${term}`;
-            const res = await fetch(`http://localhost:5000/api/dictionary/${code}`);
+            const code = term.match(/^[HG]\d+/i) ? term.toUpperCase() : `H${term}`;
+
+            // Try Strong's API first
+            let res = await fetch(`http://localhost:5000/api/strongs/${code}`);
+
             if (res.ok) {
                 const data = await res.json();
-                setDictionaryEntry(data);
+                // Transform Strong's API response to match dictionary format
+                setDictionaryEntry({
+                    code: data.strongsNumber,
+                    headword: data.lemma,
+                    transliteration: data.translit || '',
+                    pronunciation: data.translit || '',
+                    definition: data.kjvDef || data.strongsDef || '',
+                    ukrainianDef: data.ukrainianDef
+                });
                 if (codeToSearch) {
                     setSearchTerm(code); // Sync input if searched externally
                     setActiveTab('dictionary');
                 }
             } else {
-                setDictionaryEntry(null);
+                // Fallback to legacy dictionary API
+                res = await fetch(`http://localhost:5000/api/dictionary/${code}`);
+                if (res.ok) {
+                    const data = await res.json();
+                    setDictionaryEntry(data);
+                    if (codeToSearch) {
+                        setSearchTerm(code);
+                        setActiveTab('dictionary');
+                    }
+                } else {
+                    setDictionaryEntry(null);
+                }
             }
         } catch (err) {
             console.error('Search failed', err);
@@ -166,7 +188,23 @@ const StudyPanel = ({
                                 </p>
                                 <p style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>{dictionaryEntry.transliteration} | {dictionaryEntry.pronunciation}</p>
                                 <hr style={{ border: 'none', borderTop: '1px solid var(--bg-tertiary)', margin: '0.5rem 0' }} />
-                                <p style={{ lineHeight: '1.4' }}>{dictionaryEntry.definition}</p>
+
+                                {/* Show Ukrainian definition if available and language is Ukrainian */}
+                                {dictionaryEntry.ukrainianDef && language === 'ua' ? (
+                                    <>
+                                        <p style={{ lineHeight: '1.4', fontWeight: 'bold', color: 'var(--accent-primary)' }}>
+                                            🇺🇦 {dictionaryEntry.ukrainianDef}
+                                        </p>
+                                        <details style={{ marginTop: '0.5rem' }}>
+                                            <summary style={{ cursor: 'pointer', fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                                                {language === 'en' ? 'Show English definition' : 'Показати англійське визначення'}
+                                            </summary>
+                                            <p style={{ lineHeight: '1.4', marginTop: '0.5rem', fontSize: '0.85rem' }}>{dictionaryEntry.definition}</p>
+                                        </details>
+                                    </>
+                                ) : (
+                                    <p style={{ lineHeight: '1.4' }}>{dictionaryEntry.definition}</p>
+                                )}
                             </div>
                         ) : searchTerm && (
                             <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>{language === 'en' ? 'No entry found.' : 'Нічого не знайдено.'}</p>

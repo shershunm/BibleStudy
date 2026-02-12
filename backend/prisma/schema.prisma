@@ -53,12 +53,13 @@ model Chapter {
 }
 
 model Verse {
-  id        Int       @id @default(autoincrement())
-  number    Int
-  text      String
-  chapterId Int
-  chapter   Chapter   @relation(fields: [chapterId], references: [id])
-  notes     Note[]
+  id             Int     @id @default(autoincrement())
+  chapterId      Int
+  number         Int
+  text           String
+  strongsNumbers String? // Comma-separated Strong's numbers (e.g., "H1234,H5678,G25")
+  chapter        Chapter @relation(fields: [chapterId], references: [id])
+  notes          Note[]
   highlights Highlight[]
 
   @@unique([chapterId, number])
@@ -85,23 +86,25 @@ model Highlight {
   createdAt DateTime @default(now())
 }
 
-model DictionaryEntry {
-  id          Int     @id @default(autoincrement())
-  code        String  @unique // e.g., H7225, G746
-  headword    String  // The original word
-  transliteration String?
-  definition  String
-  pronunciation String?
-  strongsNumber String?
-}
-
 model MapLocation {
   id          Int     @id @default(autoincrement())
   name        String
+  description String?
   latitude    Float?
   longitude   Float?
-  description String?
   biblicalEra String? // e.g., Patriarchal, United Monarchy, etc.
+}
+
+model StrongsEntry {
+  id              Int     @id @default(autoincrement())
+  strongsNumber   String  @unique // e.g., "H1234" or "G5678"
+  language        String  // "hebrew" or "greek"
+  translit        String  // Transliteration
+  lemma           String  // Original word
+  kjvDef          String? // KJV definition
+  strongsDef      String? // Strong's definition
+  derivation      String? // Word origin/etymology
+  ukrainianDef    String? // Ukrainian translation of definition
 }
 
 model StudyNote {

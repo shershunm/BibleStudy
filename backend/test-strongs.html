@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ukrainian Strong's Dictionary Test</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            border-bottom: 3px solid #4CAF50;
+            padding-bottom: 10px;
+        }
+        .verse {
+            margin: 20px 0;
+            padding: 15px;
+            background: #f9f9f9;
+            border-left: 4px solid #4CAF50;
+            line-height: 1.8;
+        }
+        .verse-number {
+            font-weight: bold;
+            color: #4CAF50;
+            margin-right: 10px;
+        }
+        .strongs-number {
+            display: inline-block;
+            background: #2196F3;
+            color: white;
+            padding: 2px 6px;
+            margin: 0 2px;
+            border-radius: 3px;
+            font-size: 0.75em;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .strongs-number:hover {
+            background: #1976D2;
+        }
+        .dictionary-panel {
+            margin-top: 20px;
+            padding: 20px;
+            background: #fff3cd;
+            border: 1px solid #ffc107;
+            border-radius: 4px;
+            display: none;
+        }
+        .dictionary-panel.active {
+            display: block;
+        }
+        .dictionary-panel h3 {
+            margin-top: 0;
+            color: #856404;
+        }
+        .definition {
+            margin: 10px 0;
+        }
+        .label {
+            font-weight: bold;
+            color: #666;
+        }
+        .hebrew, .greek {
+            font-size: 1.5em;
+            color: #333;
+        }
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #666;
+        }
+        .error {
+            color: #d32f2f;
+            padding: 10px;
+            background: #ffebee;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🇺🇦 Ukrainian Strong's Dictionary Test</h1>
+        <p>Testing Strong's numbers integration with Ukrainian Bible (Огієнка 1962)</p>
+        
+        <div id="verses-container" class="loading">Loading verses...</div>
+        
+        <div id="dictionary-panel" class="dictionary-panel">
+            <h3>Strong's Dictionary</h3>
+            <div id="dictionary-content"></div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:5000/api';
+        
+        async function loadVerses() {
+            try {
+                const response = await fetch(`${API_BASE}/bible/chapter/UBIO/1/1`);
+                const data = await response.json();
+                
+                const container = document.getElementById('verses-container');
+                container.innerHTML = '';
+                container.classList.remove('loading');
+                
+                // Display first 3 verses
+                data.verses.slice(0, 3).forEach(verse => {
+                    const verseDiv = document.createElement('div');
+                    verseDiv.className = 'verse';
+                    
+                    let verseHTML = `<span class="verse-number">${verse.number}.</span> ${verse.text}`;
+                    
+                    // Add Strong's numbers if available
+                    if (verse.strongsNumbers) {
+                        const strongsArray = verse.strongsNumbers.split(',');
+                        verseHTML += '<br><br><strong>Strong\'s Numbers:</strong> ';
+                        strongsArray.forEach(num => {
+                            verseHTML += `<span class="strongs-number" onclick="lookupStrongs('${num.trim()}')">${num.trim()}</span> `;
+                        });
+                    }
+                    
+                    verseDiv.innerHTML = verseHTML;
+                    container.appendChild(verseDiv);
+                });
+            } catch (error) {
+                document.getElementById('verses-container').innerHTML = 
+                    `<div class="error">Error loading verses: ${error.message}</div>`;
+            }
+        }
+        
+        async function lookupStrongs(number) {
+            const panel = document.getElementById('dictionary-panel');
+            const content = document.getElementById('dictionary-content');
+            
+            panel.classList.add('active');
+            content.innerHTML = '<div class="loading">Loading definition...</div>';
+            
+            try {
+                const response = await fetch(`${API_BASE}/strongs/${number}`);
+                const entry = await response.json();
+                
+                content.innerHTML = `
+                    <div class="definition">
+                        <span class="label">Strong's Number:</span> ${entry.strongsNumber}
+                    </div>
+                    <div class="definition">
+                        <span class="label">Original Word:</span> <span class="${entry.language}">${entry.lemma}</span>
+                    </div>
+                    <div class="definition">
+                        <span class="label">Transliteration:</span> ${entry.translit || 'N/A'}
+                    </div>
+                    <div class="definition">
+                        <span class="label">Language:</span> ${entry.language === 'hebrew' ? 'Hebrew' : 'Greek'}
+                    </div>
+                    <div class="definition">
+                        <span class="label">KJV Definition:</span> ${entry.kjvDef || 'N/A'}
+                    </div>
+                    <div class="definition">
+                        <span class="label">Strong's Definition:</span> ${entry.strongsDef || 'N/A'}
+                    </div>
+                    ${entry.derivation ? `<div class="definition"><span class="label">Derivation:</span> ${entry.derivation}</div>` : ''}
+                    ${entry.ukrainianDef ? `<div class="definition"><span class="label">Ukrainian Definition:</span> ${entry.ukrainianDef}</div>` : ''}
+                `;
+            } catch (error) {
+                content.innerHTML = `<div class="error">Error loading definition: ${error.message}</div>`;
+            }
+        }
+        
+        // Load verses on page load
+        loadVerses();
+    </script>
+</body>
+</html>

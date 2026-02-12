@@ -213,19 +213,46 @@ app.get('/api/bible/chapter/:versionCode/:bookNumber/:chapterNumber', async (req
     }
 });
 
-// Dictionary API
-app.get('/api/dictionary/:code', async (req, res) => {
-    const { code } = req.params;
+
+// Strong's Dictionary API
+app.get('/api/strongs/:number', async (req, res) => {
+    const { number } = req.params;
     try {
-        const entry = await prisma.dictionaryEntry.findUnique({
-            where: { code: code.toUpperCase() }
+        const entry = await prisma.strongsEntry.findUnique({
+            where: { strongsNumber: number.toUpperCase() }
         });
         if (!entry) return res.status(404).json({ error: 'Entry not found' });
         res.json(entry);
     } catch (error) {
-        res.status(500).json({ error: 'Failed to fetch dictionary entry' });
+        res.status(500).json({ error: 'Failed to fetch Strong\'s entry' });
     }
 });
+
+// Legacy dictionary API (for backward compatibility with existing dictionary entries)
+app.get('/api/dictionary/:code', async (req, res) => {
+    const { code } = req.params;
+    // Check if it's a Strong's number
+    if (code.match(/^[HG]\d+$/i)) {
+        try {
+            const entry = await prisma.strongsEntry.findUnique({
+                where: { strongsNumber: code.toUpperCase() }
+            });
+            if (!entry) return res.status(404).json({ error: 'Entry not found' });
+            res.json({
+                code: entry.strongsNumber,
+                headword: entry.lemma,
+                transliteration: entry.translit,
+                definition: entry.ukrainianDef || entry.strongsDef || entry.kjvDef || '',
+                pronunciation: entry.translit
+            });
+        } catch (error) {
+            res.status(500).json({ error: 'Failed to fetch dictionary entry' });
+        }
+    } else {
+        res.status(404).json({ error: 'Entry not found' });
+    }
+});
+
 
 // User Sync Endpoint - Fixes persistence issues by fetching all data
 app.get('/api/user/:email', async (req, res) => {
@@ -322,6 +349,163 @@ app.get('/api/maps/locations', async (req, res) => {
     }
 });
 
+// Search API
+app.get('/api/search', async (req, res) => {
+    const { q, scope, email } = req.query;
+
+    if (!q || q.length < 2) {
+        return res.json({ results: [] });
+    }
+
+    try {
+        const results = {
+            bible: [],
+            dictionary: [],
+            maps: [],
+            notes: []
+        };
+
+        const searchAll = !scope || scope === 'all';
+
+        // 1. Search Bible Verses
+        if (searchAll || scope === 'bible') {
+            const verses = await prisma.verse.findMany({
+                where: {
+                    text: { contains: q }
+                },
+                take: 10,
+                include: {
+                    chapter: {
+                        include: {
+                            book: {
+                                include: {
+                                    bibleVersion: true
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+            results.bible = verses.map(v => ({
+                type: 'verse',
+                id: v.id,
+                text: v.text,
+                reference: `${v.chapter.book.name} ${v.chapter.number}:${v.number}`,
+                version: v.chapter.book.bibleVersion.code,
+                bookNumber: v.chapter.book.number,
+                chapterNumber: v.chapter.number,
+                verseNumber: v.number
+            }));
+        }
+
+        // 2. Search Dictionary
+        if (searchAll || scope === 'dictionary') {
+            const entries = await prisma.dictionaryEntry.findMany({
+                where: {
+                    OR: [
+                        { headword: { contains: q } },
+                        { definition: { contains: q } },
+                        { transliteration: { contains: q } }
+                    ]
+                },
+                take: 5
+            });
+            results.dictionary = entries.map(e => ({
+                type: 'dictionary',
+                id: e.id,
+                code: e.code,
+                headword: e.headword,
+                definition: e.definition.substring(0, 100) + '...'
+            }));
+        }
+
+        // 3. Search Map Locations
+        if (searchAll || scope === 'maps') {
+            const locations = await prisma.mapLocation.findMany({
+                where: {
+                    OR: [
+                        { name: { contains: q } },
+                        { description: { contains: q } }
+                    ]
+                },
+                take: 5
+            });
+            results.maps = locations.map(l => ({
+                type: 'map',
+                id: l.id,
+                name: l.name,
+                description: l.description
+            }));
+        }
+
+        // 4. Search User Notes (Verse Notes & Study Notes)
+        if ((searchAll || scope === 'notes') && email) {
+            const user = await prisma.user.findUnique({
+                where: { email }
+            });
+
+            if (user) {
+                // Verse Notes
+                const verseNotes = await prisma.note.findMany({
+                    where: {
+                        userId: user.id,
+                        text: { contains: q }
+                    },
+                    take: 5,
+                    include: {
+                        verse: {
+                            include: {
+                                chapter: {
+                                    include: {
+                                        book: true
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+
+                // Study Notes (Library)
+                const studyNotes = await prisma.studyNote.findMany({
+                    where: {
+                        userId: user.id,
+                        OR: [
+                            { title: { contains: q } },
+                            { content: { contains: q } }
+                        ]
+                    },
+                    take: 5
+                });
+
+                results.notes = [
+                    ...verseNotes.map(n => ({
+                        type: 'verse_note',
+                        id: n.id,
+                        text: n.text,
+                        reference: `${n.verse.chapter.book.name} ${n.verse.chapter.number}:${n.verse.number}`,
+                        bookNumber: n.verse.chapter.book.number,
+                        chapterNumber: n.verse.chapter.number,
+                        verseNumber: n.verse.number,
+                        preview: n.text
+                    })),
+                    ...studyNotes.map(sn => ({
+                        type: 'study_note',
+                        id: sn.id,
+                        title: sn.title,
+                        preview: sn.content.replace(/<[^>]*>?/gm, '').substring(0, 50) + '...' // Strip HTML for preview
+                    }))
+                ];
+            }
+        }
+
+        res.json(results);
+    } catch (error) {
+        console.error('Search error:', error);
+        res.status(500).json({ error: 'Search failed' });
+    }
+});
+
 app.listen(PORT, () => {
     console.log(`Backend server running at http://localhost:${PORT}`);
 });
+
