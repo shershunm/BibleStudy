@@ -1,0 +1,103 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  password  String
+  name      String?
+  notes     Note[]
+  highlights Highlight[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model BibleVersion {
+  id        Int      @id @default(autoincrement())
+  code      String   @unique // e.g., UBIO, KJV
+  name      String
+  language  String   // e.g., ua, en
+  books     Book[]
+}
+
+model Book {
+  id             Int          @id @default(autoincrement())
+  number         Int          // 1 for Genesis, etc.
+  name           String
+  bibleVersionId Int
+  bibleVersion   BibleVersion @relation(fields: [bibleVersionId], references: [id])
+  chapters       Chapter[]
+
+  @@unique([bibleVersionId, number])
+}
+
+model Chapter {
+  id      Int     @id @default(autoincrement())
+  number  Int
+  bookId  Int
+  book    Book    @relation(fields: [bookId], references: [id])
+  verses  Verse[]
+
+  @@unique([bookId, number])
+}
+
+model Verse {
+  id        Int       @id @default(autoincrement())
+  number    Int
+  text      String
+  chapterId Int
+  chapter   Chapter   @relation(fields: [chapterId], references: [id])
+  notes     Note[]
+  highlights Highlight[]
+
+  @@unique([chapterId, number])
+}
+
+model Note {
+  id        Int      @id @default(autoincrement())
+  text      String
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id])
+  verseId   Int
+  verse     Verse    @relation(fields: [verseId], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Highlight {
+  id        Int      @id @default(autoincrement())
+  color     String   // e.g., #ffeb3b
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id])
+  verseId   Int
+  verse     Verse    @relation(fields: [verseId], references: [id])
+  createdAt DateTime @default(now())
+}
+
+model DictionaryEntry {
+  id          Int     @id @default(autoincrement())
+  code        String  @unique // e.g., H7225, G746
+  headword    String  // The original word
+  transliteration String?
+  definition  String
+  pronunciation String?
+  strongsNumber String?
+}
+
+model MapLocation {
+  id          Int     @id @default(autoincrement())
+  name        String
+  latitude    Float?
+  longitude   Float?
+  description String?
+  biblicalEra String? // e.g., Patriarchal, United Monarchy, etc.
+}
