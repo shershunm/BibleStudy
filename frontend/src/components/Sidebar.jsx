@@ -165,7 +165,7 @@ const Sidebar = ({
                         fontWeight: activePage === 'library' ? '600' : '400'
                     }}
                 >
-                    <span>📚</span> {currentLanguage === 'en' ? 'Library' : 'Бібліотека'}
+                    <span>📚</span> {currentLanguage === 'en' ? 'Library' : 'Нотатки'}
                 </button>
                 <button
                     onClick={() => onPageChange('settings')}
