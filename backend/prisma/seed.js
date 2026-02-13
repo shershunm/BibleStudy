@@ -215,6 +215,7 @@ async function main() {
             name: 'Jerusalem',
             latitude: 31.7683,
             longitude: 35.2137,
+            type: 'city',
             description: 'The capital City of Israel, central to biblical history.',
             biblicalEra: 'United Monarchy, Early Church'
         },
@@ -222,6 +223,7 @@ async function main() {
             name: 'Hebron',
             latitude: 31.5298,
             longitude: 35.1021,
+            type: 'city',
             description: 'Ancient city, home of the Patriarchs.',
             biblicalEra: 'Patriarchal'
         }
