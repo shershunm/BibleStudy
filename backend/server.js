@@ -587,6 +587,37 @@ app.get('/api/search', async (req, res) => {
     }
 });
 
+// Seed endpoint for Render (since Shell is paid feature)
+app.post('/api/seed', async (req, res) => {
+    try {
+        const { type, secret } = req.body;
+
+        // Simple security check
+        if (secret !== 'seed-bible-2026') {
+            return res.status(403).json({ error: 'Unauthorized' });
+        }
+
+        let result;
+        if (type === 'bible') {
+            const { execSync } = await import('child_process');
+            result = execSync('node prisma/seed.js', { encoding: 'utf-8' });
+        } else if (type === 'strongs') {
+            const { execSync } = await import('child_process');
+            result = execSync('node prisma/seed-strongs.js', { encoding: 'utf-8' });
+        } else if (type === 'maps') {
+            const { execSync } = await import('child_process');
+            result = execSync('node prisma/seed-map-data.js', { encoding: 'utf-8' });
+        } else {
+            return res.status(400).json({ error: 'Invalid seed type. Use: bible, strongs, or maps' });
+        }
+
+        res.json({ success: true, message: `${type} data seeded successfully`, output: result });
+    } catch (error) {
+        console.error('Seed error:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
 app.listen(PORT, () => {
     console.log(`Backend server running at http://localhost:${PORT}`);
 });
