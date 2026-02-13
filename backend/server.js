@@ -342,10 +342,92 @@ app.delete('/api/notes/library/:id', async (req, res) => {
 // Maps API
 app.get('/api/maps/locations', async (req, res) => {
     try {
-        const locations = await prisma.mapLocation.findMany();
+        const locations = await prisma.mapLocation.findMany({
+            orderBy: { name: 'asc' }
+        });
         res.json(locations);
     } catch (error) {
+        console.error('Maps locations error:', error);
         res.status(500).json({ error: 'Failed to fetch map locations' });
+    }
+});
+
+app.get('/api/maps/locations/:id', async (req, res) => {
+    const { id } = req.params;
+    try {
+        const location = await prisma.mapLocation.findUnique({
+            where: { id: parseInt(id) }
+        });
+        if (!location) return res.status(404).json({ error: 'Location not found' });
+        res.json(location);
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to fetch location' });
+    }
+});
+
+app.get('/api/maps/journeys', async (req, res) => {
+    try {
+        const journeys = await prisma.journey.findMany({
+            orderBy: { name: 'asc' }
+        });
+        res.json(journeys);
+    } catch (error) {
+        console.error('Maps journeys error:', error);
+        res.status(500).json({ error: 'Failed to fetch journeys' });
+    }
+});
+
+app.get('/api/maps/journeys/:id', async (req, res) => {
+    const { id } = req.params;
+    try {
+        const journey = await prisma.journey.findUnique({
+            where: { id: parseInt(id) }
+        });
+        if (!journey) return res.status(404).json({ error: 'Journey not found' });
+        res.json(journey);
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to fetch journey' });
+    }
+});
+
+app.post('/api/maps/snapshots', async (req, res) => {
+    const { email, title, center, zoom, bearing, pitch, imageUrl, metadata } = req.body;
+    try {
+        const user = await prisma.user.findUnique({ where: { email } });
+        if (!user) return res.status(404).json({ error: 'User not found' });
+
+        const snapshot = await prisma.mapSnapshot.create({
+            data: {
+                userId: user.id,
+                title,
+                center: JSON.stringify(center),
+                zoom,
+                bearing: bearing || 0,
+                pitch: pitch || 0,
+                imageUrl,
+                metadata: metadata ? JSON.stringify(metadata) : null
+            }
+        });
+        res.json(snapshot);
+    } catch (error) {
+        console.error('Create snapshot error:', error);
+        res.status(500).json({ error: 'Failed to create snapshot' });
+    }
+});
+
+app.get('/api/maps/snapshots', async (req, res) => {
+    const { email } = req.query;
+    try {
+        const user = await prisma.user.findUnique({ where: { email } });
+        if (!user) return res.json([]);
+
+        const snapshots = await prisma.mapSnapshot.findMany({
+            where: { userId: user.id },
+            orderBy: { createdAt: 'desc' }
+        });
+        res.json(snapshots);
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to fetch snapshots' });
     }
 });
 

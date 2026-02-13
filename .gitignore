@@ -10,6 +10,11 @@ coverage
 build
 dist
 
+# Database
+*.db
+*.db-journal
+prisma/migrations
+
 # Misc
 .DS_Store
 .env
@@ -20,3 +25,24 @@ dist
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+
+# PM2
+.pm2
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# Logs
+logs
+*.log
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+*~
+
+# OS
+Thumbs.db

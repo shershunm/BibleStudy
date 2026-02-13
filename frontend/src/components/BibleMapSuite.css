@@ -1,0 +1,369 @@
+.bible-map-suite {
+    display: flex;
+    height: 100%;
+    width: 100%;
+    background-color: var(--bg-primary);
+    position: relative;
+}
+
+.map-container {
+    flex: 1;
+    height: 100%;
+    background-color: #000000;
+}
+
+.map-controls {
+    width: 320px;
+    background-color: var(--bg-secondary);
+    border-right: 1px solid var(--border-color);
+    padding: 1.5rem;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.map-controls h2 {
+    margin: 0 0 1rem 0;
+    font-size: 1.5rem;
+    color: var(--text-primary);
+}
+
+.control-section {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+/* Search Box */
+.search-box {
+    position: relative;
+}
+
+.search-box input {
+    width: 100%;
+    padding: 0.75rem;
+    background-color: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    color: var(--text-primary);
+    font-size: 0.95rem;
+    transition: border-color 0.2s;
+}
+
+.search-box input:focus {
+    outline: none;
+    border-color: var(--accent-primary);
+}
+
+.search-results {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background-color: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
+    border-top: none;
+    border-radius: 0 0 6px 6px;
+    max-height: 300px;
+    overflow-y: auto;
+    z-index: 10;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.search-result-item {
+    padding: 0.75rem;
+    cursor: pointer;
+    border-bottom: 1px solid var(--border-color);
+    transition: background-color 0.2s;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.search-result-item:hover {
+    background-color: var(--bg-primary);
+}
+
+.search-result-item:last-child {
+    border-bottom: none;
+}
+
+.search-result-item strong {
+    color: var(--text-primary);
+    font-size: 0.95rem;
+}
+
+.location-type {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    text-transform: capitalize;
+}
+
+/* Journey Selector */
+.journey-selector {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.journey-selector label {
+    font-weight: 600;
+    color: var(--text-primary);
+    font-size: 0.95rem;
+}
+
+.journey-selector select {
+    padding: 0.75rem;
+    background-color: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    color: var(--text-primary);
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: border-color 0.2s;
+}
+
+.journey-selector select:focus {
+    outline: none;
+    border-color: var(--accent-primary);
+}
+
+.clear-btn {
+    padding: 0.5rem 1rem;
+    background-color: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    color: var(--accent-primary);
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: all 0.2s;
+}
+
+.clear-btn:hover {
+    background-color: var(--accent-primary);
+    color: white;
+}
+
+/* Distance Tool */
+.distance-tool {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.distance-tool button {
+    padding: 0.75rem;
+    background-color: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    color: var(--text-primary);
+    cursor: pointer;
+    font-size: 0.95rem;
+    transition: all 0.2s;
+}
+
+.distance-tool button:hover,
+.distance-tool button.active {
+    background-color: var(--accent-primary);
+    color: white;
+    border-color: var(--accent-primary);
+}
+
+.tool-hint {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    margin: 0;
+    font-style: italic;
+}
+
+.distance-result {
+    background-color: var(--bg-tertiary);
+    padding: 0.75rem;
+    border-radius: 6px;
+    border-left: 3px solid var(--accent-primary);
+}
+
+.distance-result p {
+    margin: 0.25rem 0;
+    font-size: 0.9rem;
+    color: var(--text-primary);
+}
+
+.distance-result strong {
+    color: var(--accent-primary);
+}
+
+/* Export Controls */
+.export-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.export-controls label {
+    font-weight: 600;
+    color: var(--text-primary);
+    font-size: 0.95rem;
+}
+
+.export-controls button {
+    padding: 0.75rem;
+    background-color: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    color: var(--text-primary);
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: all 0.2s;
+}
+
+.export-controls button:hover {
+    background-color: var(--accent-primary);
+    color: white;
+    border-color: var(--accent-primary);
+}
+
+.snap-btn {
+    background-color: var(--accent-primary) !important;
+    color: white !important;
+    font-weight: 600;
+}
+
+.snap-btn:hover {
+    opacity: 0.9;
+}
+
+/* Map Popup Styling */
+.map-popup {
+    font-family: var(--font-sans);
+    min-width: 200px;
+}
+
+.map-popup h3 {
+    margin: 0 0 0.5rem 0;
+    font-size: 1.1rem;
+    color: var(--accent-primary);
+}
+
+.map-popup p {
+    margin: 0.5rem 0;
+    font-size: 0.9rem;
+    color: var(--text-primary);
+}
+
+.map-popup .coordinates {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    font-family: monospace;
+}
+
+.popup-actions {
+    margin-top: 0.75rem;
+    display: flex;
+    gap: 0.5rem;
+}
+
+.popup-btn {
+    padding: 0.5rem 0.75rem;
+    background-color: var(--accent-primary);
+    border: none;
+    border-radius: 4px;
+    color: white;
+    cursor: pointer;
+    font-size: 0.85rem;
+    transition: opacity 0.2s;
+}
+
+.popup-btn:hover {
+    opacity: 0.8;
+}
+
+/* Custom Marker */
+.custom-marker {
+    cursor: pointer;
+    transition: transform 0.2s;
+}
+
+.custom-marker:hover {
+    transform: scale(1.1);
+}
+
+/* Pulse Animation */
+@keyframes pulse {
+    0% {
+        transform: scale(1);
+        opacity: 0.8;
+    }
+
+    50% {
+        transform: scale(1.5);
+        opacity: 0.4;
+    }
+
+    100% {
+        transform: scale(2);
+        opacity: 0;
+    }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .bible-map-suite {
+        flex-direction: column;
+    }
+
+    .map-controls {
+        width: 100%;
+        max-height: 40vh;
+        border-right: none;
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .map-container {
+        height: 60vh;
+    }
+}
+
+/* Mapbox Popup Overrides */
+.mapboxgl-popup-content {
+    background-color: var(--bg-secondary);
+    color: var(--text-primary);
+    border-radius: 8px;
+    padding: 1rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+}
+
+.mapboxgl-popup-close-button {
+    color: var(--text-primary);
+    font-size: 1.5rem;
+    padding: 0.5rem;
+}
+
+.mapboxgl-popup-close-button:hover {
+    background-color: var(--bg-tertiary);
+    color: var(--accent-primary);
+}
+
+.mapboxgl-popup-tip {
+    border-top-color: var(--bg-secondary);
+}
+
+/* Navigation Controls */
+.mapboxgl-ctrl-group {
+    background-color: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+}
+
+.mapboxgl-ctrl-group button {
+    background-color: var(--bg-secondary);
+    color: var(--text-primary);
+}
+
+.mapboxgl-ctrl-group button:hover {
+    background-color: var(--bg-tertiary);
+}
+
+.mapboxgl-ctrl-icon {
+    filter: invert(1);
+}

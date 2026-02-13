@@ -168,6 +168,24 @@ const Sidebar = ({
                     <span>📚</span> {currentLanguage === 'en' ? 'Library' : 'Нотатки'}
                 </button>
                 <button
+                    onClick={() => onPageChange('maps')}
+                    style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '12px',
+                        padding: '10px 12px',
+                        borderRadius: '6px',
+                        background: activePage === 'maps' ? 'var(--bg-tertiary)' : 'transparent',
+                        color: activePage === 'maps' ? 'var(--accent-primary)' : 'var(--text-secondary)',
+                        border: 'none',
+                        textAlign: 'left',
+                        width: '100%',
+                        fontWeight: activePage === 'maps' ? '600' : '400'
+                    }}
+                >
+                    <span>🗺️</span> {currentLanguage === 'en' ? 'Maps' : 'Карти'}
+                </button>
+                <button
                     onClick={() => onPageChange('settings')}
                     style={{
                         display: 'flex',

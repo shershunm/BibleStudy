@@ -6,6 +6,7 @@ import StudyPanel from './components/StudyPanel';
 import NotesLibrary from './components/NotesLibrary';
 import Settings from './components/Settings';
 import SearchModal from './components/SearchModal';
+import BibleMapSuite from './components/BibleMapSuite';
 
 import LoginPage from './components/LoginPage';
 
@@ -249,6 +250,18 @@ function App() {
               notes={studyNotesList}
               userEmail={user.email}
               onNotesUpdate={setStudyNotesList}
+            />
+          ) : activePage === 'maps' ? (
+            <BibleMapSuite
+              language={language}
+              userEmail={user.email}
+              onSnapToNote={(imageData, metadata) => {
+                // Switch to dashboard and insert image into study panel
+                setActivePage('dashboard');
+                setIsStudyPanelCollapsed(false);
+                // TODO: Implement image insertion into Quill editor
+                console.log('Map snapshot captured:', metadata);
+              }}
             />
           ) : (
             <Settings

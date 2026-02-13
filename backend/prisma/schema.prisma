@@ -19,6 +19,7 @@ model User {
   notes     Note[]
   highlights Highlight[]
   studyNotes StudyNote[]
+  mapSnapshots MapSnapshot[]
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
@@ -87,12 +88,18 @@ model Highlight {
 }
 
 model MapLocation {
-  id          Int     @id @default(autoincrement())
-  name        String
-  description String?
-  latitude    Float?
-  longitude   Float?
-  biblicalEra String? // e.g., Patriarchal, United Monarchy, etc.
+  id              Int      @id @default(autoincrement())
+  name            String
+  nameUkrainian   String?
+  description     String?
+  descriptionUa   String?
+  latitude        Float
+  longitude       Float
+  type            String   // city, region, mountain, sea, river, etc.
+  biblicalPeriod  String?  // OT, NT, both
+  verseReferences String?  // JSON array of verse IDs
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 }
 
 model StrongsEntry {
@@ -116,3 +123,32 @@ model StudyNote {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
+
+model Journey {
+  id              Int      @id @default(autoincrement())
+  name            String
+  nameUkrainian   String?
+  description     String?
+  descriptionUa   String?
+  waypoints       String   // JSON array of {lat, lng, name} objects
+  color           String   @default("#0033FF")
+  category        String   // exodus, paul_missionary_1, paul_missionary_2, paul_missionary_3, jesus_ministry, etc.
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model MapSnapshot {
+  id              Int      @id @default(autoincrement())
+  userId          Int
+  user            User     @relation(fields: [userId], references: [id])
+  title           String
+  center          String   // JSON: {lat, lng}
+  zoom            Float
+  bearing         Float    @default(0)
+  pitch           Float    @default(0)
+  imageUrl        String?  // Path to saved image
+  metadata        String?  // JSON: {locations: [], verses: [], notes: ""}
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
